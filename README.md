@@ -1,22 +1,16 @@
 # Gestion Etudiant
 
-Laravel API for student management.
+Laravel API
 
-## API Endpoints
+## Setup
 
-### Etudiants
-- `GET /api/etudiants` - List all students
-- `POST /api/etudiants` - Create student
-- `GET /api/etudiants/{id}` - Get student
-- `PUT /api/etudiants/{id}` - Update student
-- `DELETE /api/etudiants/{id}` - Delete student
-
-### Classes
-- `GET /api/classes` - List all classes
-- `POST /api/classes` - Create class
-- `GET /api/classes/{id}` - Get class
-- `PUT /api/classes/{id}` - Update class
-- `DELETE /api/classes/{id}` - Delete class
+```
+bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+```
 
 ## Docker
 
@@ -25,8 +19,8 @@ bash
 docker-compose up -d
 ```
 
-## Kubernetes
+## API
 
-```
-bash
-kubectl apply -f k8s/
+- `GET /api/etudiants`
+- `POST /api/etudiants`
+- `GET /api/classes`
