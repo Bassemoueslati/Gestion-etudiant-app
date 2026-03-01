@@ -1,0 +1,77 @@
+# =============================================================================
+# Docker Ignore File
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Laravel
+.env
+.env.example
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Cache
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+
+# Storage (keep directory but ignore contents)
+storage/app/*
+!storage/app/.gitignore
+storage/framework/cache/*
+!storage/framework/cache/.gitignore
+storage/framework/sessions/*
+!storage/framework/sessions/.gitignore
+storage/framework/views/*
+!storage/framework/views/.gitignore
+storage/logs/*
+!storage/logs/.gitignore
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Testing
+.phpunit.result.cache
+coverage/
+.phpunit.coverage.xml
+
+# Docker files (we'll build from context)
+Dockerfile
+docker-compose.yml
+.docker/
+docker-sync.yml
+
+# Kubernetes
+k8s/
+*.kubeconfig
+
+# Misc
+*.bak
+*.tmp
+*.zip
+*.tar.gz

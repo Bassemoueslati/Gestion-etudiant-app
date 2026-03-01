@@ -1,0 +1,215 @@
+---
+# =============================================================================
+# Kubernetes Service for Laravel Application
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: gestion-etudiant-app
+  namespace: gestion-etudiant
+  labels:
+    app: gestion-etudiant
+    tier: backend
+  annotations:
+    description: "Laravel Application Service"
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: gestion-etudiant
+    tier: backend
+
+---
+# =============================================================================
+# MySQL Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: gestion-etudiant-mysql
+  namespace: gestion-etudiant
+  labels:
+    app: gestion-etudiant
+    tier: database
+  annotations:
+    description: "MySQL Database Service"
+spec:
+  type: ClusterIP
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+      protocol: TCP
+  selector:
+    app: gestion-etudiant
+    tier: database
+
+---
+# =============================================================================
+# Redis Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: gestion-etudiant-redis
+  namespace: gestion-etudiant
+  labels:
+    app: gestion-etudiant
+    tier: cache
+  annotations:
+    description: "Redis Cache Service"
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    app: gestion-etudiant
+    tier: cache
+
+---
+# =============================================================================
+# Ingress Configuration (for external access)
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gestion-etudiant-ingress
+  namespace: gestion-etudiant
+  labels:
+    app: gestion-etudiant
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20M"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - gestion-etudiant.example.com
+      secretName: gestion-etudiant-tls
+  rules:
+    - host: gestion-etudiant.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gestion-etudiant-app
+                port:
+                  number: 80
+
+---
+# =============================================================================
+# ServiceAccount for the Application
+# =============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gestion-etudiant-app
+  namespace: gestion-etudiant
+  labels:
+    app: gestion-etudiant
+
+---
+# =============================================================================
+# Role and RoleBinding for the Application
+# =============================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gestion-etudiant-app
+  namespace: gestion-etudiant
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+
+---
+# =============================================================================
+# RoleBinding
+# =============================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gestion-etudiant-app
+  namespace: gestion-etudiant
+subjects:
+  - kind: ServiceAccount
+    name: gestion-etudiant-app
+    namespace: gestion-etudiant
+roleRef:
+  kind: Role
+  name: gestion-etudiant-app
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# =============================================================================
+# NetworkPolicy (optional - for network isolation)
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gestion-etudiant-app
+  namespace: gestion-etudiant
+spec:
+  podSelector:
+    matchLabels:
+      app: gestion-etudiant
+      tier: backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: gestion-etudiant
+              tier: backend
+      ports:
+        - protocol: TCP
+          port: 9000
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: gestion-etudiant
+              tier: database
+      ports:
+        - protocol: TCP
+          port: 3306
+    - to:
+        - podSelector:
+            matchLabels:
+              app: gestion-etudiant
+              tier: cache
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
